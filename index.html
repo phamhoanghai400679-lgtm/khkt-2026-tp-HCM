@@ -1,1 +1,242 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Check Iron — Kiểm tra mức độ gỉ sét</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #202123;
+      background: #f7f7f8;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; margin: 0; background: #f7f7f8; }
+    .topbar {
+      height: 64px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e8e8eb;
+      background: rgba(255, 255, 255, .82);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 750; letter-spacing: -.02em; }
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: #fff;
+      background: #b45309;
+      font-size: .78rem;
+    }
+    .topbar-note { color: #737781; font-size: .9rem; }
+    main { width: min(100% - 32px, 760px); margin: 0 auto; padding: 64px 0 48px; }
+    .hero { max-width: 620px; margin: 0 auto 32px; text-align: center; }
+    .eyebrow { color: #9a4b10; font-size: .78rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: 12px 0 10px; font-size: clamp(2rem, 5vw, 2.8rem); letter-spacing: -.045em; line-height: 1.1; }
+    .intro { margin: 0; color: #666a73; font-size: 1.02rem; line-height: 1.65; }
+    .workspace { padding: 24px; border: 1px solid #e5e5e8; border-radius: 22px; background: #fff; box-shadow: 0 12px 32px rgba(32, 33, 35, .045); }
+    .notice, .error { padding: 13px 15px; border-radius: 13px; margin: 0 0 18px; line-height: 1.5; }
+    .notice { background: #fff7ed; color: #8a3b12; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; }
+    .field-label { display: block; margin-bottom: 9px; font-size: .94rem; font-weight: 700; }
+    .upload-row { display: flex; align-items: stretch; gap: 10px; }
+    input[type="file"] {
+      min-width: 0;
+      flex: 1;
+      padding: 11px 12px;
+      border: 1px solid #dedee2;
+      border-radius: 13px;
+      background: #fff;
+      color: #565a63;
+      font: inherit;
+      font-size: .9rem;
+    }
+    button {
+      min-height: 46px;
+      border: 0;
+      border-radius: 13px;
+      padding: 0 18px;
+      color: white;
+      background: #b45309;
+      font: inherit;
+      font-weight: 720;
+      cursor: pointer;
+      transition: background .15s ease, transform .15s ease;
+    }
+    button:hover { background: #92400e; }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: .65; cursor: wait; }
+    .file-trigger, .camera-trigger { color: #3d4047; background: #f3f3f5; border: 1px solid #e3e3e6; }
+    .file-trigger { flex: 1; }
+    .camera-trigger { display: none; flex: 0 0 auto; }
+    .file-trigger:hover, .camera-trigger:hover { background: #e9e9ec; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #f59e0b; outline-offset: 3px; }
+    .helper, .small { color: #777b84; font-size: .86rem; line-height: 1.55; }
+    .helper { margin: 10px 0 0; }
+    .small { margin: 22px 0 0; text-align: center; }
+    .previews { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 14px; }
+    .preview-card { min-width: 0; margin: 0; }
+    .preview { display: block; width: 100%; height: 110px; object-fit: cover; border-radius: 12px; background: #f3f4f6; }
+    .preview-card figcaption { margin-top: 5px; color: #666a73; font-size: .78rem; overflow-wrap: anywhere; }
+    .form-message { min-height: 20px; margin: 8px 0 0; color: #9a3412; font-size: .88rem; }
+    .submit-row { display: flex; justify-content: flex-end; margin-top: 12px; }
+    .results { display: grid; gap: 12px; margin: 24px 0 0; }
+    .results h2 { margin: 0 0 2px; font-size: 1.1rem; letter-spacing: -.015em; }
+    .result-card { padding: 18px; border: 1px solid #e7e7eb; border-radius: 16px; background: #fff; }
+    .result-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
+    .filename { max-width: 100%; color: #6b6f78; font-size: .86rem; overflow-wrap: anywhere; }
+    .prediction { padding: 6px 10px; border-radius: 999px; color: #8a3b12; background: #fff4e8; font-size: .85rem; font-weight: 750; }
+    .probabilities { display: grid; gap: 13px; }
+    .score-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: .9rem; }
+    .score-heading strong { font-variant-numeric: tabular-nums; }
+    .score-track { height: 8px; overflow: hidden; border-radius: 999px; background: #eeeef0; }
+    .score-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #d97706, #b45309); }
+    .empty-state { margin: 0; color: #737781; }
+    @media (max-width: 640px) {
+      .topbar { height: 58px; padding: 0 16px; }
+      .topbar-note { font-size: .8rem; }
+      main { width: min(100% - 24px, 520px); padding: 42px 0 30px; }
+      .hero { margin-bottom: 24px; }
+      .intro { font-size: .96rem; }
+      .workspace { padding: 18px; border-radius: 18px; }
+      .upload-row { flex-direction: column; }
+      input[type="file"], .upload-row button { width: 100%; min-height: 48px; }
+      .camera-trigger { display: inline-flex; align-items: center; justify-content: center; }
+      .submit-row button { width: 100%; }
+      .result-card { padding: 15px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">CI</span><span>Check Iron</span></div>
+    <span class="topbar-note">Kiểm tra mức độ gỉ sét</span>
+  </header>
+  <main>
+    <section class="hero">
+      <span class="eyebrow">Phân tích bề mặt kim loại</span>
+      <h1>Kiểm tra độ gỉ trong ảnh</h1>
+      <p class="intro">Chụp ảnh bằng điện thoại hoặc chọn ảnh có sẵn. Check Iron sẽ ước tính mức độ gỉ trên bề mặt.</p>
+    </section>
 
+    {% if not model_ready %}
+      <div class="notice" role="status">
+        Chưa có mô hình đã huấn luyện. Hãy thêm ảnh vào các thư mục trong
+        <strong>dataset/train/clean</strong>, <strong>light_rust</strong> và <strong>heavy_rust</strong>,
+        rồi chạy <code>python train.py</code> trong Terminal.
+      </div>
+    {% endif %}
+
+    {% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
+
+    <section class="workspace" aria-label="Chọn ảnh để phân tích">
+      <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+        <label class="field-label" for="images">Thêm ảnh cần kiểm tra</label>
+        <div class="upload-row">
+          <button id="fileTrigger" class="file-trigger" type="button">Chọn ảnh từ thiết bị</button>
+          <input id="images" name="images" type="file" accept="image/jpeg,image/png,image/webp,image/bmp" multiple hidden>
+          <button id="cameraTrigger" class="camera-trigger" type="button">Chụp bằng camera</button>
+          <input id="cameraImages" name="images" type="file" accept="image/*" capture="environment" hidden>
+        </div>
+        <p class="helper">Trên điện thoại, chọn “Chụp bằng camera” để dùng camera sau. Có thể chọn tối đa 10 ảnh.</p>
+        <div id="previews" class="previews"></div>
+        <p id="formMessage" class="form-message" aria-live="polite"></p>
+        <div class="submit-row">
+          <button id="submitButton" type="submit">Phân tích ảnh</button>
+        </div>
+        <p class="helper">Hỗ trợ JPG, PNG, WEBP, BMP; tối đa 40 MB mỗi lượt.</p>
+      </form>
+    </section>
+
+    {% if results %}
+      <section class="results" aria-live="polite">
+        <h2>Kết quả phân tích</h2>
+        {% for item in results %}
+          <article class="result-card">
+            <div class="result-top">
+              <span class="filename">{{ item.filename }}</span>
+              {% if not item.error %}<span class="prediction">{{ item.label }}</span>{% endif %}
+            </div>
+            {% if item.error %}
+              <div class="error" role="alert">{{ item.error }}</div>
+            {% else %}
+              <div class="probabilities" aria-label="Tỉ lệ dự đoán theo từng nhóm">
+                {% for score in item.probabilities %}
+                  <div>
+                    <div class="score-heading"><span>{{ score.label }}</span><strong>{{ score.percent }}%</strong></div>
+                    <div class="score-track" role="meter" aria-label="{{ score.label }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ score.percent }}">
+                      <div class="score-fill" style="width: {{ score.percent }}%;"></div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    <p class="small">Kết quả phụ thuộc vào chất lượng ảnh và dữ liệu huấn luyện. Đây là mô hình tham khảo, không thay thế kiểm định chuyên môn. Ảnh không được lưu lại.</p>
+  </main>
+  <script>
+    const form = document.getElementById("uploadForm");
+    const input = document.getElementById("images");
+    const cameraInput = document.getElementById("cameraImages");
+    const fileTrigger = document.getElementById("fileTrigger");
+    const cameraTrigger = document.getElementById("cameraTrigger");
+    const submitButton = document.getElementById("submitButton");
+    const previews = document.getElementById("previews");
+    const formMessage = document.getElementById("formMessage");
+    const allFiles = () => [...input.files, ...cameraInput.files].filter(file => file.name);
+
+    fileTrigger.addEventListener("click", () => input.click());
+    cameraTrigger.addEventListener("click", () => cameraInput.click());
+
+    function renderPreviews() {
+      previews.replaceChildren();
+      formMessage.textContent = "";
+      const files = allFiles();
+      if (files.length > 10) {
+        formMessage.textContent = "Mỗi lượt chỉ chọn tối đa 10 ảnh.";
+      }
+      for (const file of files.slice(0, 10)) {
+        const card = document.createElement("figure");
+        card.className = "preview-card";
+        const image = document.createElement("img");
+        image.className = "preview";
+        image.alt = "Xem trước ảnh";
+        image.src = URL.createObjectURL(file);
+        const caption = document.createElement("figcaption");
+        caption.textContent = file.name;
+        card.append(image, caption);
+        previews.append(card);
+      }
+    }
+
+    input.addEventListener("change", renderPreviews);
+    cameraInput.addEventListener("change", renderPreviews);
+    form.addEventListener("submit", event => {
+      const files = allFiles();
+      if (!files.length || files.length > 10) {
+        event.preventDefault();
+        formMessage.textContent = files.length
+          ? "Mỗi lượt chỉ chọn tối đa 10 ảnh."
+          : "Hãy chụp hoặc chọn ít nhất một ảnh.";
+        return;
+      }
+      submitButton.disabled = true;
+      submitButton.textContent = "Đang phân tích...";
+    });
+  </script>
+</body>
+</html>
