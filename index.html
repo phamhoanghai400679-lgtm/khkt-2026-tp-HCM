@@ -175,7 +175,7 @@
                   <div>
                     <div class="score-heading"><span>{{ score.label }}</span><strong>{{ score.percent }}%</strong></div>
                     <div class="score-track" role="meter" aria-label="{{ score.label }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ score.percent }}">
-                      <div class="score-fill" style="width: {{ score.percent }}%;"></div>
+                      <div class="score-fill" data-percent="{{ score.percent }}"></div>
                     </div>
                   </div>
                 {% endfor %}

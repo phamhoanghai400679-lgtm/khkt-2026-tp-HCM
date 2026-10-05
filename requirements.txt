@@ -1,5 +1,6 @@
 flask
-joblib
 numpy
 pillow
+joblib
 scikit-learn
+gunicorn
