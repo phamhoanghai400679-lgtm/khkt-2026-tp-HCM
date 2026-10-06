@@ -1,75 +1,140 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Phân tích hình ảnh</title>
+  <meta charset="UTF-8">
+  <title>Check Iron – Kiểm tra mức độ gỉ sét</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fafafa;
+      text-align: center;
+      margin: 40px;
+      color: #333;
+    }
+    h1 {
+      color: #ff6600;
+      margin-bottom: 10px;
+    }
+    p {
+      color: #555;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .upload-btn {
+      background-color: #f0f0f0;
+    }
+    .camera-btn {
+      background-color: #e0e0ff;
+    }
+    .analyze-btn {
+      background-color: #ff6600;
+      color: white;
+      font-weight: bold;
+    }
+    #preview {
+      margin-top: 20px;
+      max-width: 100%;
+      border-radius: 8px;
+      display: none;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    th {
+      background-color: #f8f8f8;
+    }
+  </style>
 </head>
 <body>
-    <h1>Phân tích hình ảnh</h1>
+  <div class="container">
+    <h1>Phân tích bề mặt kim loại</h1>
+    <p>Chụp ảnh bằng điện thoại hoặc chọn ảnh có sẵn để AI phân tích mức độ gỉ sét.</p>
+
     <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
-        <!-- Input dành cho MÁY TÍNH: chọn file từ thư mục -->
-        <label>Chọn ảnh từ máy tính:</label><br>
-        <input type="file" name="image" accept="image/*" required><br><br>
+      <!-- Chọn ảnh từ thiết bị -->
+      <input type="file" id="fileInput" name="image" accept="image/*" style="display:none;">
+      <label for="fileInput" class="button upload-btn">📁 Chọn ảnh từ thiết bị</label>
 
-        <!-- Input dành cho ĐIỆN THOẠI: mở camera để chụp ảnh -->
-        <label>Chụp ảnh bằng camera điện thoại:</label><br>
-        <input type="file" id="cameraInput" name="image" accept="image/*" capture="camera" required><br><br>
+      <!-- Chụp ảnh bằng camera -->
+      <input type="file" id="cameraInput" name="image" accept="image/*" capture="camera" style="display:none;">
+      <label for="cameraInput" class="button camera-btn">📷 Chụp bằng camera</label>
 
-        <button type="submit">Phân tích</button>
+      <button type="submit" class="button analyze-btn">Phân tích ảnh</button>
     </form>
 
-    <!-- Hiển thị ảnh vừa chọn/chụp -->
-    <h2>Ảnh đã chọn:</h2>
-    <img id="preview" src="" alt="Ảnh vừa gửi" style="max-width:300px; display:none; margin-top:10px;">
+    <img id="preview" src="" alt="Ảnh vừa gửi">
 
     <h2>Kết quả phân tích:</h2>
     <table id="resultTable" style="display:none;">
-        <tr><th>Cấp độ</th><th>Tỉ lệ (%)</th></tr>
-        <tr><td>Nhẹ</td><td id="light">--</td></tr>
-        <tr><td>Trung bình</td><td id="medium">--</td></tr>
-        <tr><td>Nặng</td><td id="severe">--</td></tr>
+      <tr><th>Cấp độ</th><th>Tỉ lệ (%)</th></tr>
+      <tr><td>Nhẹ</td><td id="light">--</td></tr>
+      <tr><td>Trung bình</td><td id="medium">--</td></tr>
+      <tr><td>Nặng</td><td id="severe">--</td></tr>
     </table>
     <p id="conclusion" style="font-weight:bold;">Chưa có kết quả</p>
+  </div>
 
-    <script>
-        const cameraInput = document.getElementById("cameraInput");
-        const preview = document.getElementById("preview");
-        const form = document.getElementById("uploadForm");
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const cameraInput = document.getElementById("cameraInput");
+    const preview = document.getElementById("preview");
+    const form = document.getElementById("uploadForm");
 
-        // Hiển thị ảnh vừa chọn/chụp
-        function showPreview(file) {
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = "block";
-                }
-                reader.readAsDataURL(file);
-            }
+    function showPreview(file) {
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          preview.src = e.target.result;
+          preview.style.display = "block";
         }
+        reader.readAsDataURL(file);
+      }
+    }
 
-        // Khi chụp ảnh bằng camera → hiển thị và gửi form luôn
-        cameraInput.addEventListener("change", function() {
-            const file = this.files[0];
-            showPreview(file);
-            if (file) {
-                form.submit();
-            }
-        });
+    // Hiển thị ảnh khi chọn hoặc chụp
+    fileInput.addEventListener("change", function() {
+      showPreview(this.files[0]);
+    });
+    cameraInput.addEventListener("change", function() {
+      showPreview(this.files[0]);
+      form.submit(); // tự động gửi sau khi chụp
+    });
 
-        // Khi submit form → gửi ảnh lên server và hiển thị kết quả
-        form.addEventListener("submit", async function(e) {
-            e.preventDefault();
-            const formData = new FormData(form);
-            const response = await fetch("/predict", { method: "POST", body: formData });
-            const data = await response.json();
+    // Gửi form và hiển thị kết quả
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const response = await fetch("/predict", { method: "POST", body: formData });
+      const data = await response.json();
 
-            document.getElementById("light").textContent = data["Nhẹ"] || "--";
-            document.getElementById("medium").textContent = data["Trung bình"] || "--";
-            document.getElementById("severe").textContent = data["Nặng"] || "--";
-            document.getElementById("conclusion").textContent = data["Kết luận"] || "Không có kết quả";
-            document.getElementById("resultTable").style.display = "table";
-        });
-    </script>
+      document.getElementById("light").textContent = data["Nhẹ"] || "--";
+      document.getElementById("medium").textContent = data["Trung bình"] || "--";
+      document.getElementById("severe").textContent = data["Nặng"] || "--";
+      document.getElementById("conclusion").textContent = data["Kết luận"] || "Không có kết quả";
+      document.getElementById("resultTable").style.display = "table";
+    });
+  </script>
 </body>
 </html>
