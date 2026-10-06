@@ -1,29 +1,28 @@
 import joblib
 import numpy as np
 from PIL import Image
-from io import BytesIO
 
-# Kích thước ảnh phải khớp với lúc huấn luyện
-IMG_SIZE = (64, 64)
+# Load model khi import module
+MODEL_PATH = "rust_model.pkl"
+model = joblib.load(MODEL_PATH)
 
-def load_model():
-    """Load model đã huấn luyện từ file model.pkl"""
-    model = joblib.load("model.pkl")
-    return model
+def preprocess_image(image_file):
+    """
+    Nhận file ảnh (stream từ Flask), chuyển thành vector phù hợp với model.
+    """
+    img = Image.open(image_file).convert("RGB")
+    img_resized = img.resize((128, 128))  # resize cố định
+    img_array = np.array(img_resized).flatten().reshape(1, -1)
+    return img_array
 
-def predict(model, file_bytes):
-    """Dự đoán mức độ gỉ sét từ ảnh"""
-    # Đọc ảnh từ file upload
-    img = Image.open(file_bytes).convert("RGB")
-    img = img.resize(IMG_SIZE)
-    arr = np.array(img).flatten() / 255.0  # chuẩn hóa pixel
-
-    # Dự đoán xác suất cho từng lớp
-    probs = model.predict_proba([arr])[0]
-    labels = ["Gỉ nhẹ", "Gỉ trung bình", "Gỉ nặng"]
-
-    # Tạo dict kết quả
-    result = {labels[i]: float(probs[i]) for i in range(len(labels))}
-    max_label = labels[np.argmax(probs)]
-
-    return result, max_label
+def predict(image_file):
+    """
+    Trả về xác suất (%) cho 3 cấp độ: Nhẹ, Trung bình, Nặng.
+    """
+    img_array = preprocess_image(image_file)
+    probs = model.predict_proba(img_array)[0]  # [p1, p2, p3]
+    return {
+        "Nhẹ": f"{probs[0]*100:.2f}%",
+        "Trung bình": f"{probs[1]*100:.2f}%",
+        "Nặng": f"{probs[2]*100:.2f}%"
+    }

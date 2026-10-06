@@ -1,50 +1,45 @@
-from flask import Flask, render_template, request
-import base64
-from io import BytesIO
+from flask import Flask, request, jsonify, render_template
 from PIL import Image
-from rust_model import load_model, predict
+import numpy as np
+import joblib
 import os
 
 app = Flask(__name__)
-model = load_model()
 
-@app.route("/", methods=["GET"])
-def home():
+# --- Load model tại đây ---
+MODEL_PATH = "model.pkl"
+if os.path.exists(MODEL_PATH):
+    model = joblib.load(MODEL_PATH)
+else:
+    raise FileNotFoundError(f"Không tìm thấy file {MODEL_PATH}")
+
+@app.route("/")
+def index():
+
     return render_template("index.html")
 
-@app.route("/backup", methods=["GET"])
-def backup():
-    return render_template("index_backup.html")
-
 @app.route("/predict", methods=["POST"])
-def predict_route():
-    preview_data = None
-    probs = None
-    max_label = None
+def predict():
+    try:
+        file = request.files["image"]
+        img = Image.open(file.stream).convert("RGB")
 
-    if "file" in request.files:
-        file = request.files["file"]
-        if file:
-            file_bytes = file.read()
+        # xử lý ảnh
+        img_resized = img.resize((64, 64))
+        img_array = np.array(img_resized).flatten().reshape(1, -1)
 
-            # tạo ảnh preview base64
-            image = Image.open(BytesIO(file_bytes)).convert("RGB")
-            image = image.resize((224, 224))
-            buffer = BytesIO()
-            image.save(buffer, format="PNG")
-            preview_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        # dự đoán xác suất cho 3 lớp
+        probs = model.predict_proba(img_array)[0]
 
-            # gọi model để phân tích
-            file_stream = BytesIO(file_bytes)
-            probs, max_label = predict(model, file_stream)
+        result = {
+            "class_1": f"{probs[0]*100:.2f}%",
+            "class_2": f"{probs[1]*100:.2f}%",
+            "class_3": f"{probs[2]*100:.2f}%"
+        }
+        return jsonify(result)
 
-            # chuyển xác suất sang % và làm tròn
-            probs = [round(p * 100, 2) for p in probs]
-
-    return render_template("index.html",
-                           preview_data=preview_data,
-                           probs=probs,
-                           max_label=max_label)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

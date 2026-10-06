@@ -1,28 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Rust AI</title>
+    <meta charset="UTF-8">
+    <title>Phân tích hình ảnh</title>
 </head>
 <body>
-    <h1>Kiểm tra mức độ gỉ sét</h1>
-    <form action="/predict" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept="image/*" capture="camera">
+    <h1>Phân tích hình ảnh bằng camera hoặc upload</h1>
+
+    <!-- Form upload ảnh từ file hoặc camera -->
+    <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" capture="camera">
         <button type="submit">Phân tích</button>
     </form>
 
-    {% if preview_data %}
-        <h2>Ảnh preview:</h2>
-        <img src="data:image/png;base64,{{ preview_data }}" alt="Preview">
-    {% endif %}
+    <h2>Kết quả:</h2>
+    <pre id="result"></pre>
 
-    {% if probs %}
-        <h2>Kết quả dự đoán:</h2>
-        <ul>
-            <li>Gỉ sét nhẹ: {{ probs[0] }}%</li>
-            <li>Gỉ sét vừa: {{ probs[1] }}%</li>
-            <li>Gỉ sét nặng: {{ probs[2] }}%</li>
-        </ul>
-        <p>Mức độ cao nhất: {{ max_label }}</p>
-    {% endif %}
+    <script>
+        const form = document.getElementById("uploadForm");
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch("/predict", {
+                method: "POST",
+                body: formData
+            });
+            const result = await response.json();
+            document.getElementById("result").textContent = JSON.stringify(result, null, 2);
+        });
+    </script>
 </body>
 </html>
