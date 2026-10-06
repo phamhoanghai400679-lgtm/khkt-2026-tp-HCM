@@ -24,7 +24,6 @@
 <body>
     <h1>Phân tích hình ảnh bằng camera hoặc upload</h1>
 
-    <!-- Form upload/chụp ảnh -->
     <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
         <input type="file" name="image" accept="image/*" capture="camera" required>
         <button type="submit">Phân tích</button>
@@ -32,14 +31,12 @@
 
     <h2>Kết quả phân tích:</h2>
     <table class="result-table" id="resultTable" style="display:none;">
-        <tr>
-            <th>Cấp độ</th>
-            <th>Tỉ lệ (%)</th>
-        </tr>
+        <tr><th>Cấp độ</th><th>Tỉ lệ (%)</th></tr>
         <tr><td>Nhẹ</td><td id="light"></td></tr>
         <tr><td>Trung bình</td><td id="medium"></td></tr>
         <tr><td>Nặng</td><td id="severe"></td></tr>
     </table>
+    <p id="conclusion" style="font-weight:bold; margin-top:10px;"></p>
 
     <script>
         const form = document.getElementById("uploadForm");
@@ -60,6 +57,7 @@
                 document.getElementById("light").textContent = data["Nhẹ"];
                 document.getElementById("medium").textContent = data["Trung bình"];
                 document.getElementById("severe").textContent = data["Nặng"];
+                document.getElementById("conclusion").textContent = data["Kết luận"];
                 document.getElementById("resultTable").style.display = "table";
             }
         });
