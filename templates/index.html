@@ -1,76 +1,28 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>AI Check Iron</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f7fa;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    header {
-      background-color: #2c3e50;
-      color: white;
-      padding: 20px;
-      font-size: 24px;
-      font-weight: bold;
-    }
-    .container {
-      margin-top: 40px;
-    }
-    .result {
-      margin-top: 30px;
-      font-size: 20px;
-      color: #2c3e50;
-    }
-    img.preview {
-      margin-top: 20px;
-      max-width: 300px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-    }
-  </style>
+    <title>Rust AI</title>
 </head>
 <body>
-  <header>AI Check Iron</header>
-  <div class="container">
-    <h2>Chụp hoặc tải ảnh gỉ sắt để kiểm tra</h2>
-    <form method="post" enctype="multipart/form-data">
-      <!-- input có capture="camera" sẽ mở máy ảnh trên điện thoại -->
-      <input type="file" id="imageInput" name="image" accept="image/*" capture="camera" required>
-      <br><br>
-      <img id="preview" class="preview" style="display:none;">
-      <br>
-      <button type="submit">Dự đoán</button>
+    <h1>Kiểm tra mức độ gỉ sét</h1>
+    <form action="/predict" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" capture="camera">
+        <button type="submit">Phân tích</button>
     </form>
-    <div class="result">
-      {% if result %}
-        Kết quả: {{ result }}
-      {% else %}
-        Chưa có kết quả
-      {% endif %}
-    </div>
-  </div>
 
-  <script>
-    // Hiển thị ảnh preview ngay khi chọn/chụp
-    const input = document.getElementById("imageInput");
-    const preview = document.getElementById("preview");
+    {% if preview_data %}
+        <h2>Ảnh preview:</h2>
+        <img src="data:image/png;base64,{{ preview_data }}" alt="Preview">
+    {% endif %}
 
-    input.addEventListener("change", () => {
-      const file = input.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          preview.src = e.target.result;
-          preview.style.display = "block";
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  </script>
+    {% if probs %}
+        <h2>Kết quả dự đoán:</h2>
+        <ul>
+            <li>Gỉ sét nhẹ: {{ probs[0] }}%</li>
+            <li>Gỉ sét vừa: {{ probs[1] }}%</li>
+            <li>Gỉ sét nặng: {{ probs[2] }}%</li>
+        </ul>
+        <p>Mức độ cao nhất: {{ max_label }}</p>
+    {% endif %}
 </body>
 </html>

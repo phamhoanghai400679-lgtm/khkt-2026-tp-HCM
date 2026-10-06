@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rust AI - Backup</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        img { max-width: 300px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Rust AI (Giao diện phụ)</h1>
+    <form action="/predict" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" capture="camera">
+        <button type="submit">Phân tích</button>
+    </form>
+
+    {% if preview_data %}
+        <h2>Ảnh bạn vừa chụp:</h2>
+        <img src="data:image/png;base64,{{ preview_data }}" alt="Preview">
+    {% endif %}
+
+    {% if probs %}
+        <h2>Kết quả phân tích:</h2>
+        <p>Nhẹ: {{ probs[0] }}%</p>
+        <p>Vừa: {{ probs[1] }}%</p>
+        <p>Nặng: {{ probs[2] }}%</p>
+        <p><strong>Mức độ cao nhất:</strong> {{ max_label }}</p>
+    {% endif %}
+</body>
+</html>

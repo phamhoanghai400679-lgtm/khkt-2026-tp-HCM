@@ -1,67 +1,51 @@
 from flask import Flask, render_template, request
-import joblib
-import numpy as np
+import base64
+from io import BytesIO
 from PIL import Image
+from rust_model import load_model, predict
 import os
 
 app = Flask(__name__)
+model = load_model()
 
-# Đường dẫn file mô hình
-MODEL_PATH = "rust_model.pkl"
+@app.route("/", methods=["GET"])
+def home():
+    return render_template("index.html")
 
-# Kiểm tra mô hình đã huấn luyện chưa
-model_ready = os.path.exists(MODEL_PATH)
-error = None
-results = []
+@app.route("/backup", methods=["GET"])
+def backup():
+    return render_template("index_backup.html")
 
-# Nếu có mô hình thì load
-if model_ready:
-    model_data = joblib.load(MODEL_PATH)
-    model = model_data["model"]
-    classes = model_data["classes"]
-else:
-    model = None
-    classes = []
+@app.route("/predict", methods=["POST"])
+def predict_route():
+    preview_data = None
+    probs = None
+    max_label = None
 
-def preprocess_image(file, size=(64, 64)):
-    """Chuyển ảnh thành vector để dự đoán"""
-    img = Image.open(file).convert("RGB")
-    img = img.resize(size)
-    arr = np.array(img).flatten()
-    return arr
+    if "file" in request.files:
+        file = request.files["file"]
+        if file:
+            file_bytes = file.read()
 
-@app.route("/", methods=["GET", "POST"])
-def index():
-    global error, results
-    results = []
-    error = None
+            # tạo ảnh preview base64
+            image = Image.open(BytesIO(file_bytes)).convert("RGB")
+            image = image.resize((224, 224))
+            buffer = BytesIO()
+            image.save(buffer, format="PNG")
+            preview_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
-    if request.method == "POST":
-        try:
-            if not model_ready:
-                error = "Chưa có mô hình huấn luyện. Vui lòng chạy train.py trước."
-            else:
-                file = request.files["image"]
-                arr = preprocess_image(file)
-                y_pred = model.predict([arr])[0]
+            # gọi model để phân tích
+            file_stream = BytesIO(file_bytes)
+            probs, max_label = predict(model, file_stream)
 
-                # Tạo kết quả hiển thị
-                results.append({
-                    "filename": file.filename,
-                    "label": y_pred,
-                    "error": None,
-                    "probabilities": [
-                        {"label": y_pred, "percent": 100}
-                    ]
-                })
-        except Exception as e:
-            error = str(e)
+            # chuyển xác suất sang % và làm tròn
+            probs = [round(p * 100, 2) for p in probs]
 
     return render_template("index.html",
-                           model_ready=model_ready,
-                           error=error,
-                           results=results)
+                           preview_data=preview_data,
+                           probs=probs,
+                           max_label=max_label)
 
 if __name__ == "__main__":
-    app.run(debug=True)
-    
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
