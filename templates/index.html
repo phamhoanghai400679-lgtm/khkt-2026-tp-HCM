@@ -3,63 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <title>Phân tích hình ảnh</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        h1 { color: #2c3e50; }
-        .result-table {
-            border-collapse: collapse;
-            margin-top: 20px;
-            width: 300px;
-        }
-        .result-table th, .result-table td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: center;
-        }
-        .result-table th {
-            background-color: #f4f4f4;
-        }
-    </style>
 </head>
 <body>
-    <h1>Phân tích hình ảnh bằng camera hoặc upload</h1>
-
+    <h1>Phân tích hình ảnh</h1>
     <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
+        <!-- Chọn ảnh từ thư viện -->
+        <input type="file" name="image" accept="image/*" required>
+        <!-- Chụp trực tiếp bằng camera -->
         <input type="file" name="image" accept="image/*" capture="camera" required>
         <button type="submit">Phân tích</button>
     </form>
 
     <h2>Kết quả phân tích:</h2>
-    <table class="result-table" id="resultTable" style="display:none;">
+    <table id="resultTable" style="display:none;">
         <tr><th>Cấp độ</th><th>Tỉ lệ (%)</th></tr>
-        <tr><td>Nhẹ</td><td id="light"></td></tr>
-        <tr><td>Trung bình</td><td id="medium"></td></tr>
-        <tr><td>Nặng</td><td id="severe"></td></tr>
+        <tr><td>Nhẹ</td><td id="light">--</td></tr>
+        <tr><td>Trung bình</td><td id="medium">--</td></tr>
+        <tr><td>Nặng</td><td id="severe">--</td></tr>
     </table>
-    <p id="conclusion" style="font-weight:bold; margin-top:10px;"></p>
+    <p id="conclusion" style="font-weight:bold;">Chưa có kết quả</p>
 
     <script>
         const form = document.getElementById("uploadForm");
         form.addEventListener("submit", async function(e) {
             e.preventDefault();
             const formData = new FormData(form);
-
-            const response = await fetch("/predict", {
-                method: "POST",
-                body: formData
-            });
-
+            const response = await fetch("/predict", { method: "POST", body: formData });
             const data = await response.json();
 
-            if (data.error) {
-                alert("Lỗi: " + data.error);
-            } else {
-                document.getElementById("light").textContent = data["Nhẹ"];
-                document.getElementById("medium").textContent = data["Trung bình"];
-                document.getElementById("severe").textContent = data["Nặng"];
-                document.getElementById("conclusion").textContent = data["Kết luận"];
-                document.getElementById("resultTable").style.display = "table";
-            }
+            document.getElementById("light").textContent = data["Nhẹ"] || "--";
+            document.getElementById("medium").textContent = data["Trung bình"] || "--";
+            document.getElementById("severe").textContent = data["Nặng"] || "--";
+            document.getElementById("conclusion").textContent = data["Kết luận"] || "Không có kết quả";
+            document.getElementById("resultTable").style.display = "table";
         });
     </script>
 </body>
