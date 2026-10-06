@@ -6,40 +6,54 @@
 </head>
 <body>
     <h1>Phân tích hình ảnh</h1>
-   <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
-    <!-- Cho phép chọn ảnh từ máy tính -->
-    <input type="file" name="image" accept="image/*" required>
-    <!-- Cho phép chụp ảnh trực tiếp bằng camera trên điện thoại -->
-    <input type="file" id="cameraInput" name="image" accept="image/*" capture="camera" required>
-    <button type="submit">Phân tích</button>
-</form>
+    <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
+        <!-- Cho phép chọn ảnh từ máy tính -->
+        <input type="file" name="image" accept="image/*" required>
+        <!-- Cho phép chụp ảnh trực tiếp bằng camera trên điện thoại -->
+        <input type="file" id="cameraInput" name="image" accept="image/*" capture="camera" required>
+        <button type="submit">Phân tích</button>
+    </form>
 
-<!-- Hiển thị ảnh vừa chụp -->
-<img id="preview" src="" alt="Ảnh vừa gửi" style="max-width:300px; display:none; margin-top:10px;">
+    <!-- Hiển thị ảnh vừa chọn/chụp -->
+    <h2>Ảnh đã chọn:</h2>
+    <img id="preview" src="" alt="Ảnh vừa gửi" style="max-width:300px; display:none; margin-top:10px;">
 
-<script>
-    const cameraInput = document.getElementById("cameraInput");
-    const preview = document.getElementById("preview");
-    const form = document.getElementById("uploadForm");
+    <h2>Kết quả phân tích:</h2>
+    <table id="resultTable" style="display:none;">
+        <tr><th>Cấp độ</th><th>Tỉ lệ (%)</th></tr>
+        <tr><td>Nhẹ</td><td id="light">--</td></tr>
+        <tr><td>Trung bình</td><td id="medium">--</td></tr>
+        <tr><td>Nặng</td><td id="severe">--</td></tr>
+    </table>
+    <p id="conclusion" style="font-weight:bold;">Chưa có kết quả</p>
 
-    // Khi chụp xong, tự động hiển thị ảnh và gửi form
-    cameraInput.addEventListener("change", function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.style.display = "block";
-            }
-            reader.readAsDataURL(file);
-
-            // Gửi form ngay sau khi chụp xong
-            form.submit();
-        }
-    });
-</script>
-
+    <script>
+        const cameraInput = document.getElementById("cameraInput");
+        const preview = document.getElementById("preview");
         const form = document.getElementById("uploadForm");
+
+        // Hiển thị ảnh vừa chọn/chụp
+        function showPreview(file) {
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = "block";
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Khi chọn/chụp ảnh bằng camera → hiển thị và gửi form luôn
+        cameraInput.addEventListener("change", function() {
+            const file = this.files[0];
+            showPreview(file);
+            if (file) {
+                form.submit();
+            }
+        });
+
+        // Khi submit form → gửi ảnh lên server và hiển thị kết quả
         form.addEventListener("submit", async function(e) {
             e.preventDefault();
             const formData = new FormData(form);
