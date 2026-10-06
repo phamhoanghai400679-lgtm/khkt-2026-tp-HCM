@@ -65,6 +65,10 @@
     th {
       background-color: #f8f8f8;
     }
+    #errorMsg {
+      color: red;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -94,6 +98,7 @@
       <tr><td>Nặng</td><td id="severe">--</td></tr>
     </table>
     <p id="conclusion" style="font-weight:bold;">Chưa có kết quả</p>
+    <p id="errorMsg"></p>
   </div>
 
   <script>
@@ -101,6 +106,7 @@
     const cameraInput = document.getElementById("cameraInput");
     const preview = document.getElementById("preview");
     const form = document.getElementById("uploadForm");
+    const errorMsg = document.getElementById("errorMsg");
 
     function showPreview(file) {
       if (file) {
@@ -113,28 +119,55 @@
       }
     }
 
-    // Hiển thị ảnh khi chọn hoặc chụp
+    // Khi chọn ảnh từ máy tính
     fileInput.addEventListener("change", function() {
       showPreview(this.files[0]);
     });
+
+    // Khi chụp ảnh bằng camera → hiển thị và gửi form luôn
     cameraInput.addEventListener("change", function() {
-      showPreview(this.files[0]);
-      form.submit(); // tự động gửi sau khi chụp
+      const file = this.files[0];
+      if (file) {
+        showPreview(file);
+        sendImage(file);
+      }
     });
 
-    // Gửi form và hiển thị kết quả
+    // Gửi form khi nhấn nút "Phân tích ảnh"
     form.addEventListener("submit", async function(e) {
       e.preventDefault();
-      const formData = new FormData(form);
-      const response = await fetch("/predict", { method: "POST", body: formData });
-      const data = await response.json();
-
-      document.getElementById("light").textContent = data["Nhẹ"] || "--";
-      document.getElementById("medium").textContent = data["Trung bình"] || "--";
-      document.getElementById("severe").textContent = data["Nặng"] || "--";
-      document.getElementById("conclusion").textContent = data["Kết luận"] || "Không có kết quả";
-      document.getElementById("resultTable").style.display = "table";
+      const file = fileInput.files[0] || cameraInput.files[0];
+      if (!file) {
+        errorMsg.textContent = "⚠️ Vui lòng chọn hoặc chụp ảnh trước khi phân tích.";
+        return;
+      }
+      sendImage(file);
     });
+
+    // Hàm gửi ảnh lên server và hiển thị kết quả
+    async function sendImage(file) {
+      errorMsg.textContent = "";
+      const formData = new FormData();
+      formData.append("image", file);
+
+      try {
+        const response = await fetch("/predict", { method: "POST", body: formData });
+        const data = await response.json();
+
+        if (data.error) {
+          errorMsg.textContent = "⚠️ " + data.error;
+          return;
+        }
+
+        document.getElementById("light").textContent = data["Nhẹ"] || "--";
+        document.getElementById("medium").textContent = data["Trung bình"] || "--";
+        document.getElementById("severe").textContent = data["Nặng"] || "--";
+        document.getElementById("conclusion").textContent = data["Kết luận"] || "Không có kết quả";
+        document.getElementById("resultTable").style.display = "table";
+      } catch (err) {
+        errorMsg.textContent = "⚠️ Lỗi kết nối hoặc định dạng dữ liệu.";
+      }
+    }
   </script>
 </body>
 </html>
