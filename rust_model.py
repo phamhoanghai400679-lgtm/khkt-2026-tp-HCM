@@ -2,27 +2,29 @@ import joblib
 import numpy as np
 from PIL import Image
 
-# Load model khi import module
-MODEL_PATH = "rust_model.pkl"
+# Load model
+MODEL_PATH = "model.pkl"
 model = joblib.load(MODEL_PATH)
 
 def preprocess_image(image_file):
-    """
-    Nhận file ảnh (stream từ Flask), chuyển thành vector phù hợp với model.
-    """
     img = Image.open(image_file).convert("RGB")
-    img_resized = img.resize((128, 128))  # resize cố định
+    img_resized = img.resize((128, 128))
     img_array = np.array(img_resized).flatten().reshape(1, -1)
     return img_array
 
 def predict(image_file):
-    """
-    Trả về xác suất (%) cho 3 cấp độ: Nhẹ, Trung bình, Nặng.
-    """
+    # AI phân tích ảnh
     img_array = preprocess_image(image_file)
-    probs = model.predict_proba(img_array)[0]  # [p1, p2, p3]
-    return {
-        "Nhẹ": f"{probs[0]*100:.2f}%",
-        "Trung bình": f"{probs[1]*100:.2f}%",
-        "Nặng": f"{probs[2]*100:.2f}%"
-    }
+    probs = model.predict_proba(img_array)[0]
+
+    # 3 cấp độ
+    labels = ["Nhẹ", "Trung bình", "Nặng"]
+
+    # Tỉ lệ %
+    result = {labels[i]: f"{probs[i]*100:.2f}%" for i in range(len(labels))}
+
+    # Cấp độ cao nhất
+    max_index = np.argmax(probs)
+    result["Kết luận"] = f"AI phân tích: {labels[max_index]} ({probs[max_index]*100:.2f}%)"
+
+    return result
