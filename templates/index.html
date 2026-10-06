@@ -7,10 +7,14 @@
 <body>
     <h1>Phân tích hình ảnh</h1>
     <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
-        <!-- Cho phép chọn ảnh từ máy tính -->
-        <input type="file" name="image" accept="image/*" required>
-        <!-- Cho phép chụp ảnh trực tiếp bằng camera trên điện thoại -->
-        <input type="file" id="cameraInput" name="image" accept="image/*" capture="camera" required>
+        <!-- Input dành cho MÁY TÍNH: chọn file từ thư mục -->
+        <label>Chọn ảnh từ máy tính:</label><br>
+        <input type="file" name="image" accept="image/*" required><br><br>
+
+        <!-- Input dành cho ĐIỆN THOẠI: mở camera để chụp ảnh -->
+        <label>Chụp ảnh bằng camera điện thoại:</label><br>
+        <input type="file" id="cameraInput" name="image" accept="image/*" capture="camera" required><br><br>
+
         <button type="submit">Phân tích</button>
     </form>
 
@@ -44,7 +48,7 @@
             }
         }
 
-        // Khi chọn/chụp ảnh bằng camera → hiển thị và gửi form luôn
+        // Khi chụp ảnh bằng camera → hiển thị và gửi form luôn
         cameraInput.addEventListener("change", function() {
             const file = this.files[0];
             showPreview(file);
