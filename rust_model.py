@@ -18,14 +18,19 @@ def predict(image_file):
 
         labels = ["Nhẹ", "Trung bình", "Nặng"]
 
-        # Luôn trả về đủ 3 cấp độ
+        # Luôn trả về đủ 3 cấp độ với % động
         result = {labels[i]: f"{probs[i]*100:.2f}%" for i in range(len(labels))}
 
-        # Luôn có kết luận
+        # Luôn có kết luận dựa trên % cao nhất
         max_index = np.argmax(probs)
         result["Kết luận"] = f"AI phân tích: {labels[max_index]} ({probs[max_index]*100:.2f}%)"
 
         return result
     except Exception as e:
-        # Nếu có lỗi, vẫn trả về thông báo rõ ràng
-        return {"error": f"Lỗi phân tích ảnh: {str(e)}"}
+        # Nếu lỗi, vẫn trả về cấu trúc đầy đủ
+        return {
+            "Nhẹ": "--",
+            "Trung bình": "--",
+            "Nặng": "--",
+            "Kết luận": f"Lỗi phân tích ảnh: {str(e)}"
+        }
