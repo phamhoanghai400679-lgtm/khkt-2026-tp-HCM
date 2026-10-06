@@ -6,10 +6,13 @@
 </head>
 <body>
     <h1>Phân tích hình ảnh</h1>
-    <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
-        <input type="file" name="image" accept="image/*" capture="camera" required>
-        <button type="submit">Phân tích</button>
-    </form>
+   <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
+    <!-- Cho phép chọn ảnh từ máy tính -->
+    <input type="file" name="image" accept="image/*" required>
+    <!-- Cho phép chụp ảnh trực tiếp bằng camera trên điện thoại -->
+    <input type="file" name="image" accept="image/*" capture="camera" required>
+    <button type="submit">Phân tích</button>
+</form>
 
     <h2>Kết quả phân tích:</h2>
     <table id="resultTable" style="display:none;">
