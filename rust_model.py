@@ -6,10 +6,12 @@ MODEL_PATH = "model.pkl"
 model = joblib.load(MODEL_PATH)
 
 def preprocess_image(image_file):
+    # Đọc ảnh, resize về 64x64, chuẩn hóa pixel
     img = Image.open(image_file).convert("RGB")
-    img_resized = img.resize((64, 64))   # resize về 64x64
-    img_array = np.array(img_resized).flatten().reshape(1, -1)
-    return img_array
+    img_resized = img.resize((64, 64))
+    img_array = np.array(img_resized) / 255.0  # chuẩn hóa
+    img_flatten = img_array.flatten().reshape(1, -1)
+    return img_flatten
 
 def predict(image_file):
     try:

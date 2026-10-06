@@ -7,10 +7,6 @@ app = Flask(__name__)
 def index():
     return render_template("index.html")
 
-@app.route("/backup")
-def backup():
-    return render_template("index_backup.html")
-
 @app.route("/predict", methods=["POST"])
 def predict_route():
     try:

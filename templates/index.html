@@ -7,9 +7,6 @@
 <body>
     <h1>Phân tích hình ảnh</h1>
     <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
-        <!-- Chọn ảnh từ thư viện -->
-        <input type="file" name="image" accept="image/*" required>
-        <!-- Chụp trực tiếp bằng camera -->
         <input type="file" name="image" accept="image/*" capture="camera" required>
         <button type="submit">Phân tích</button>
     </form>
