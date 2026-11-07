@@ -65,10 +65,6 @@
     th {
       background-color: #f8f8f8;
     }
-    #errorMsg {
-      color: red;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -98,7 +94,7 @@
       <tr><td>Nặng</td><td id="severe">--</td></tr>
     </table>
     <p id="conclusion" style="font-weight:bold;">Chưa có kết quả</p>
-    <p id="errorMsg"></p>
+    <p id="errorMsg" style="color:red; font-weight:bold;"></p>
   </div>
 
   <script>
@@ -119,36 +115,26 @@
       }
     }
 
-    // Khi chọn ảnh từ máy tính
+    // Hiển thị ảnh khi chọn hoặc chụp
     fileInput.addEventListener("change", function() {
       showPreview(this.files[0]);
     });
-
-    // Khi chụp ảnh bằng camera → hiển thị và gửi form luôn
     cameraInput.addEventListener("change", function() {
-      const file = this.files[0];
-      if (file) {
-        showPreview(file);
-        sendImage(file);
-      }
+      showPreview(this.files[0]);
+      form.submit(); // tự động gửi sau khi chụp
     });
 
-    // Gửi form khi nhấn nút "Phân tích ảnh"
+    // Gửi form và hiển thị kết quả
     form.addEventListener("submit", async function(e) {
       e.preventDefault();
-      const file = fileInput.files[0] || cameraInput.files[0];
-      if (!file) {
-        errorMsg.textContent = "⚠️ Vui lòng chọn hoặc chụp ảnh trước khi phân tích.";
+      errorMsg.textContent = "";
+      const formData = new FormData(form);
+      const file = formData.get("image");
+
+      if (!file || file.size === 0) {
+        errorMsg.textContent = "⚠️ Không có ảnh tải lên. Vui lòng chọn hoặc chụp ảnh.";
         return;
       }
-      sendImage(file);
-    });
-
-    // Hàm gửi ảnh lên server và hiển thị kết quả
-    async function sendImage(file) {
-      errorMsg.textContent = "";
-      const formData = new FormData();
-      formData.append("image", file);
 
       try {
         const response = await fetch("/predict", { method: "POST", body: formData });
@@ -165,9 +151,9 @@
         document.getElementById("conclusion").textContent = data["Kết luận"] || "Không có kết quả";
         document.getElementById("resultTable").style.display = "table";
       } catch (err) {
-        errorMsg.textContent = "⚠️ Lỗi kết nối hoặc định dạng dữ liệu.";
+        errorMsg.textContent = "⚠️ Lỗi kết nối server hoặc định dạng dữ liệu.";
       }
-    }
+    });
   </script>
 </body>
 </html>
